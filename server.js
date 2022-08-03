@@ -1,14 +1,12 @@
 import express from 'express';
 import mysql from 'mysql2';
 import path from 'path';
-// require('dotenv').config();
 import 'dotenv/config'
+
 
 const PORT = process.env.PORT || 3001;
 const app = express();
 
-// Import custom middleware
-// app.use(clog)
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -24,7 +22,12 @@ const db = mysql.createConnection(
     console.log(`Connected to the company_db database.`)
   );
 
+  app.use((req, res) => {
+    res.status(404).end();
+  });
+
     // Port listener
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+

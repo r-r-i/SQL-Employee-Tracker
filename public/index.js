@@ -1,5 +1,4 @@
 import fs from 'fs';
-// const inquirer = require('inquirer');
 import inquirer from 'inquirer';
 
 

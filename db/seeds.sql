@@ -4,13 +4,13 @@ VALUES  ("Marketing"),
         ("Front end"),
         ("Back end");
 
-INSERT INTO employee_role(title, salary, department_id)
-VALUES  ("Intern", "50000", 2),
-        ("Junior", "120000", 1),
-        ("Senior", "150000", 3),
-        ("Manager", "200000", 4);
+INSERT INTO employee_role(title, salary)
+VALUES  ("Intern", 50000 ),
+        ("Junior", 120000 ),
+        ("Senior", 150000 ),
+        ("Manager", 200000);
 
-INSERT INTO employee(first_name, last_name, role_id, manager_id)
+INSERT INTO employee(first_name, last_name, role, manager)
 VALUES  ("John", "Doe", 2, 3),
         ("Jane", "Doe", 4, 1),
         ("Jen", "Doe", 1, 2),

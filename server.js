@@ -35,11 +35,11 @@ const initialPrompt = () => {
           choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role']
       }
   ]).then((data) => {
-      if(data.choice === 'View all departments'){ // Partially working
+      if(data.choice === 'View all departments'){ // Working, but '(index)' column is showing. Import 'console.table' properly.
           viewDepartment();
-      } else if (data.choice === 'View all roles'){
+      } else if (data.choice === 'View all roles'){ // Working, but 'department' column doesn't show department name
           viewRole();
-      } else if (data.choice === 'View all employees'){
+      } else if (data.choice === 'View all employees'){ // Working, but 'role' and 'manager' column not referencing correctly.
           viewEmployee();
       } else if (data.choice === 'Add a department'){ // Working
           promptDepartment();
@@ -137,9 +137,24 @@ const promptDepartment = () => {
     });
   });
 }
-// Prompt that allows the user to view all departments from the database
+// Function that allows the user to view all departments from the database
 const viewDepartment = () => {
   db.query("SELECT * FROM department;", function(error, results){
+    if (error) throw error;
+    console.table(results);
+  });
+}
+// Function that allows the user to view all roles from the database
+const viewRole = () => {
+  db.query("SELECT * FROM employee_role;", function(error, results){
+    if (error) throw error;
+    console.table(results);
+  });
+}
+
+// Function that allows the user to view all employees from the database
+const viewEmployee = () => {
+  db.query("SELECT * FROM employee;", function(error, results){
     if (error) throw error;
     console.table(results);
   });
@@ -153,6 +168,8 @@ const querying = () => {
   })
 }
 
+// Below function could work - not tested.
+
 // app.get(`/updateEmployee/${answers.id}`, (req, res) => {
 //   let newName = answers.newName;
 //   let sql = `UPDATE employee SET first_name = '${newName}' WHERE id = ${req.params.id}`;
@@ -164,6 +181,7 @@ const querying = () => {
 //   })
 // })
 
+// This does not work
 const employeeChoices = () => {
   const employeeQuery = `SELECT id AS value, name FROM department;`;
   const employees = db.query(employeeQuery);
@@ -172,7 +190,7 @@ const employeeChoices = () => {
 
 
 
-
+// This does not work
 const updateEmployee =  () => {
   return inquirer.prompt([
       {
@@ -183,12 +201,12 @@ const updateEmployee =  () => {
       },  
   ])
 }
-
+  // If response is wrong, send '404'.
   app.use((req, res) => {
     res.status(404).end();
   });
 
-
+  // Function to start app
   const init = () => {
     initialPrompt()
   }

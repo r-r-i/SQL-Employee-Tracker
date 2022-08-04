@@ -5,6 +5,7 @@ import 'dotenv/config';
 import inquirer from 'inquirer';
 
 
+
 const PORT = process.env.PORT || 3001;
 const app = express();
 
@@ -23,13 +24,7 @@ const db = mysql.createConnection(
     console.log(`Connected to the company_db database.`)
   );
 
-const querying = () => {
-  db.query("SELECT * FROM employee", function(error, results){
-    if (error) throw error;
-    console.log("results:", results);
-    db.end()
-  })
-}
+
 // Prompt that asks the user what they want to do
 const initialPrompt = () => {
   return inquirer.prompt([
@@ -40,7 +35,7 @@ const initialPrompt = () => {
           choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role']
       }
   ]).then((data) => {
-      if(data.choice === 'View all departments'){
+      if(data.choice === 'View all departments'){ // Partially working
           viewDepartment();
       } else if (data.choice === 'View all roles'){
           viewRole();
@@ -142,6 +137,21 @@ const promptDepartment = () => {
     });
   });
 }
+// Prompt that allows the user to view all departments from the database
+const viewDepartment = () => {
+  db.query("SELECT * FROM department;", function(error, results){
+    if (error) throw error;
+    console.table(results);
+  });
+}
+
+const querying = () => {
+  db.query("SELECT * FROM employee", function(error, results){
+    if (error) throw error;
+    console.table("results:", results);
+    db.end()
+  })
+}
 
 // app.get(`/updateEmployee/${answers.id}`, (req, res) => {
 //   let newName = answers.newName;
@@ -159,6 +169,8 @@ const employeeChoices = () => {
   const employees = db.query(employeeQuery);
   return employees[0];
 };
+
+
 
 
 const updateEmployee =  () => {

@@ -46,7 +46,7 @@ const initialPrompt = () => {
           viewRole();
       } else if (data.choice === 'View all employees'){
           viewEmployee();
-      } else if (data.choice === 'Add a department'){
+      } else if (data.choice === 'Add a department'){ // Working
           promptDepartment();
       } else if (data.choice === 'Add a role'){ // Working
           promptRole();
@@ -54,9 +54,8 @@ const initialPrompt = () => {
           promptEmployee();
       } else if (data.choice === 'Update an employee role'){
           updateEmployee();
-      }
-      
-  })
+      } 
+  });
 }
 // Prompt that allows the user to add a new employee to the database
 const promptEmployee = () => {
@@ -89,10 +88,10 @@ const promptEmployee = () => {
       manager_id: answers.manager,
     }, function(error){
       if (error) throw error;
-      console.log('Added employee');
+      console.log(`Added ${answers.firstName} ${answers.lastName} to the database`);
       initialPrompt();
-    })
-  })
+    });
+  });
 }
 // Prompt that allows the user to add a new role to the database
 const promptRole = () => {
@@ -119,10 +118,10 @@ const promptRole = () => {
       department_id: answers.empDepartment,
     }, function(error) {
       if (error) throw error;
-      console.log('Added role');
+      console.log(`Added ${answers.title} to the database`);
       initialPrompt();
-    })
-  })
+    });
+  });
 }
 // Prompt that allows the user to add a department to the database
 const promptDepartment = () => {
@@ -130,10 +129,18 @@ const promptDepartment = () => {
   return inquirer.prompt([
       {
           type: 'input',
-          message: 'What is the name of the department you would like to add?',
+          message: 'What is the name of the department?',
           name: 'department',
       }
-  ])
+  ]).then(function(answers){
+    db.query("INSERT INTO department SET ?", {
+      name: answers.department,
+    }, function(error){
+      if (error) throw error;
+      console.log(`added ${answers.department} to the database`);
+      initialPrompt();
+    });
+  });
 }
 
 // app.get(`/updateEmployee/${answers.id}`, (req, res) => {

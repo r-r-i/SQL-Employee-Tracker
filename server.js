@@ -30,7 +30,7 @@ const querying = () => {
     db.end()
   })
 }
-
+// Prompt that asks the user what they want to do
 const initialPrompt = () => {
   return inquirer.prompt([
       {
@@ -48,9 +48,9 @@ const initialPrompt = () => {
           viewEmployee();
       } else if (data.choice === 'Add a department'){
           promptDepartment();
-      } else if (data.choice === 'Add a role'){
+      } else if (data.choice === 'Add a role'){ // Working
           promptRole();
-      } else if (data.choice === 'Add an employee'){
+      } else if (data.choice === 'Add an employee'){ // Working
           promptEmployee();
       } else if (data.choice === 'Update an employee role'){
           updateEmployee();
@@ -58,7 +58,7 @@ const initialPrompt = () => {
       
   })
 }
-
+// Prompt that allows the user to add a new employee to the database
 const promptEmployee = () => {
   return inquirer.prompt([
       {
@@ -94,15 +94,80 @@ const promptEmployee = () => {
     })
   })
 }
+// Prompt that allows the user to add a new role to the database
+const promptRole = () => {
+  return inquirer.prompt([
+      {
+          type: 'input',
+          message: 'What is the name of the role you are adding?',
+          name: 'name'
+      },
+      {
+          type: 'input',
+          message: 'What is the yearly salary for this role?',
+          name: 'salary'
+      },
+      {
+          type: 'input',
+          message: 'What is the department id for this role?',
+          name: 'empDepartment'
+      }
+  ]).then(function(answers){
+    db.query("INSERT INTO employee_role SET ?",{
+      title: answers.name,
+      salary: answers.salary,
+      department_id: answers.empDepartment,
+    }, function(error) {
+      if (error) throw error;
+      console.log('Added role');
+      initialPrompt();
+    })
+  })
+}
+// Prompt that allows the user to add a department to the database
+const promptDepartment = () => {
+  console.log('This will prompt the user to enter the name of the department, which is added to the database.')
+  return inquirer.prompt([
+      {
+          type: 'input',
+          message: 'What is the name of the department you would like to add?',
+          name: 'department',
+      }
+  ])
+}
+
+// app.get(`/updateEmployee/${answers.id}`, (req, res) => {
+//   let newName = answers.newName;
+//   let sql = `UPDATE employee SET first_name = '${newName}' WHERE id = ${req.params.id}`;
+//   let query = db.query(sql,(err) => {
+//     if (err) {
+//       throw err;
+//     } 
+//     res.send('Employee Updated')
+//   })
+// })
+
+const employeeChoices = () => {
+  const employeeQuery = `SELECT id AS value, name FROM department;`;
+  const employees = db.query(employeeQuery);
+  return employees[0];
+};
+
+
+const updateEmployee =  () => {
+  return inquirer.prompt([
+      {
+        message: 'Which employee`s role do you want to update?',
+        type: 'list',
+        name: 'id',
+        choices: employeeChoices(),
+      },  
+  ])
+}
 
   app.use((req, res) => {
     res.status(404).end();
   });
-
-    // Port listener
-  // app.listen(PORT, () => {
-  //   console.log(`Server running on port ${PORT}`);
-  // });
 
 
   const init = () => {

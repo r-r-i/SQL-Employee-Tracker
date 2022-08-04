@@ -67,7 +67,7 @@ const promptRole = () => {
         },
         {
             type: 'input',
-            message: 'What department does this role work for?',
+            message: 'What is the department id for this role?',
             name: 'empDepartment'
         }
     ])

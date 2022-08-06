@@ -18,10 +18,10 @@ VALUES  ("Systems Programmer", 110000, 1 ),
         ("Sales Lead", 100000, 5);
 
 INSERT INTO my_employee(first_name, last_name, role_id, manager_id)
-VALUES  ("John", "Doe", 1, null),
-        ("Jane", "Doe", 2, null),
-        ("Jen", "Doe", 4, null),
-        ("Jay", "Doe", 3, null);
+VALUES  ("John", "Doe", 1, 1),
+        ("Jane", "Doe", 2, 1),
+        ("Jen", "Doe", 4, 1),
+        ("Jay", "Doe", 3, 1);
 
         
 

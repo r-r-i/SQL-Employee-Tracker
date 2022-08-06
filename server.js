@@ -62,8 +62,9 @@ const promptEmployee = () => {
     }
   });
   db.query("SELECT * FROM my_employee;", function (error, results){
-    for (let i = 0; i < results. length; i++){
+    for (let i = 0; i < results.length; i++){
       managerArray.push(results[i].manager_id);
+      console.log(managerArray)
     }
   })
   return inquirer.prompt([
@@ -90,11 +91,11 @@ const promptEmployee = () => {
           choices: managerArray
       },
   ]).then(function(answers){
-    db.query("INSERT INTO employee SET ?", {
+    db.query("INSERT INTO my_employee SET ?", {
       first_name: answers.firstName,
       last_name: answers.lastName,
-      role: answers.role,
-      manager: answers.manager_id,
+      role_id: answers.role,
+      manager_id: answers.manager,
     }, function(error){
       if (error) throw error;
       console.log(`Added ${answers.firstName} ${answers.lastName} to the database`);
@@ -133,7 +134,7 @@ const promptRole = () => {
       db.query("INSERT INTO employee_role SET ?", {
         title: answers.name,
         salary: answers.salary,
-        department: department,
+        department_id: department,
       },function(error) {
         if (error) throw error;
         console.log(`Added ${answers.name} to the database`);

@@ -35,7 +35,7 @@ const initialPrompt = () => {
           choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role']
       }
   ]).then((data) => {
-      if(data.choice === 'View all departments'){ // Working, but '(index)' column is showing. Import 'console.table' properly.
+      if(data.choice === 'View all departments'){ 
           viewDepartment();
       } else if (data.choice === 'View all roles'){ // Working, but 'department' column doesn't show department name
           viewRole();
@@ -54,6 +54,18 @@ const initialPrompt = () => {
 }
 // Prompt that allows the user to add a new employee to the database
 const promptEmployee = () => {
+  let roleArray = [];
+  let managerArray = [];
+  db.query("SELECT * FROM employee_role;", function (error, results) {
+    for (let i = 0; i < results.length; i++){
+      roleArray.push(results[i].title);
+    }
+  });
+  db.query("SELECT * FROM employee;", function (error, results){
+    for (let i = 0; i < results. length; i++){
+      managerArray.push(results[i].manager);
+    }
+  })
   return inquirer.prompt([
       {
           type: 'input',
@@ -66,21 +78,23 @@ const promptEmployee = () => {
           name: 'lastName'
       },
       {
-          type: 'input',
-          message:'What is this employee`s role id?',
-          name: 'role'
+          type: 'list',
+          message:'What is this employee`s role?',
+          name: 'role',
+          choices: roleArray
       },
       {
-          type: 'input',
-          message:'What is this employee`s manager id?',
-          name: 'manager'
+          type: 'list',
+          message:'Who is this employee`s manager?',
+          name: 'manager',
+          choices: managerArray
       },
   ]).then(function(answers){
     db.query("INSERT INTO employee SET ?", {
       first_name: answers.firstName,
       last_name: answers.lastName,
-      role_id: answers.role,
-      manager_id: answers.manager,
+      role: answers.role,
+      manager: answers.manager,
     }, function(error){
       if (error) throw error;
       console.log(`Added ${answers.firstName} ${answers.lastName} to the database`);
@@ -90,6 +104,12 @@ const promptEmployee = () => {
 }
 // Prompt that allows the user to add a new role to the database
 const promptRole = () => {
+  let departments = [];
+  db.query("SELECT * FROM department;" , function (error, results){
+    for (let i = 0; i < results.length; i++){
+      departments.push(results[i].name);
+    };
+  });
   return inquirer.prompt([
       {
           type: 'input',
@@ -102,22 +122,28 @@ const promptRole = () => {
           name: 'salary'
       },
       {
-          type: 'input',
-          message: 'What is the department id for this role?',
-          name: 'empDepartment'
+          type: 'list',
+          message: 'What department does this role belong to?',
+          name: 'empDepartment',
+          choices: departments
       }
   ]).then(function(answers){
-    db.query("INSERT INTO employee_role SET ?",{
-      title: answers.name,
-      salary: answers.salary,
-      department_id: answers.empDepartment,
-    }, function(error) {
-      if (error) throw error;
-      console.log(`Added ${answers.title} to the database`);
-      initialPrompt();
+    db.query("SELECT id FROM department WHERE department.name = ?", answers.empDepartment, (err, results) => {
+      let department = results[0].id
+      db.query("INSERT INTO employee_role SET ?", {
+        title: answers.name,
+        salary: answers.salary,
+        department: department,
+      },function(error) {
+        if (error) throw error;
+        console.log(`Added ${answers.name} to the database`);
+        initialPrompt();
+      });
     });
   });
 }
+
+
 // Prompt that allows the user to add a department to the database
 const promptDepartment = () => {
   console.log('This will prompt the user to enter the name of the department, which is added to the database.')
@@ -142,13 +168,15 @@ const viewDepartment = () => {
   db.query("SELECT * FROM department;", function(error, results){
     if (error) throw error;
     console.table(results);
-  });
+    initialPrompt();
+  })
 }
 // Function that allows the user to view all roles from the database
 const viewRole = () => {
   db.query("SELECT * FROM employee_role;", function(error, results){
     if (error) throw error;
     console.table(results);
+    initialPrompt();
   });
 }
 
@@ -157,50 +185,10 @@ const viewEmployee = () => {
   db.query("SELECT * FROM employee;", function(error, results){
     if (error) throw error;
     console.table(results);
+    initialPrompt();
   });
 }
 
-const querying = () => {
-  db.query("SELECT * FROM employee", function(error, results){
-    if (error) throw error;
-    console.table("results:", results);
-    db.end()
-  })
-}
-
-// Below function could work - not tested.
-
-// app.get(`/updateEmployee/${answers.id}`, (req, res) => {
-//   let newName = answers.newName;
-//   let sql = `UPDATE employee SET first_name = '${newName}' WHERE id = ${req.params.id}`;
-//   let query = db.query(sql,(err) => {
-//     if (err) {
-//       throw err;
-//     } 
-//     res.send('Employee Updated')
-//   })
-// })
-
-// This does not work
-const employeeChoices = () => {
-  const employeeQuery = `SELECT id AS value, name FROM department;`;
-  const employees = db.query(employeeQuery);
-  return employees[0];
-};
-
-
-
-// This does not work
-const updateEmployee =  () => {
-  return inquirer.prompt([
-      {
-        message: 'Which employee`s role do you want to update?',
-        type: 'list',
-        name: 'id',
-        choices: employeeChoices(),
-      },  
-  ])
-}
   // If response is wrong, send '404'.
   app.use((req, res) => {
     res.status(404).end();

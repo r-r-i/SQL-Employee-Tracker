@@ -61,9 +61,9 @@ const promptEmployee = () => {
       roleArray.push(results[i].title);
     }
   });
-  db.query("SELECT * FROM employee;", function (error, results){
+  db.query("SELECT * FROM my_employee;", function (error, results){
     for (let i = 0; i < results. length; i++){
-      managerArray.push(results[i].manager);
+      managerArray.push(results[i].manager_id);
     }
   })
   return inquirer.prompt([
@@ -94,7 +94,7 @@ const promptEmployee = () => {
       first_name: answers.firstName,
       last_name: answers.lastName,
       role: answers.role,
-      manager: answers.manager,
+      manager: answers.manager_id,
     }, function(error){
       if (error) throw error;
       console.log(`Added ${answers.firstName} ${answers.lastName} to the database`);
@@ -182,7 +182,7 @@ const viewRole = () => {
 
 // Function that allows the user to view all employees from the database
 const viewEmployee = () => {
-  db.query("SELECT * FROM employee;", function(error, results){
+  db.query("SELECT * FROM my_employee;", function(error, results){
     if (error) throw error;
     console.table(results);
     initialPrompt();

@@ -34,13 +34,13 @@ const initialPrompt = () => {
           viewDepartment();
       } else if (data.choice === 'View all roles'){ // Working!
           viewRole();
-      } else if (data.choice === 'View all employees'){ // Working, but manager_id still showing as INT
+      } else if (data.choice === 'View all employees'){ // Working!
           viewEmployee();
       } else if (data.choice === 'Add a department'){ // Working!
           promptDepartment();
       } else if (data.choice === 'Add a role'){ // Working!
           promptRole();
-      } else if (data.choice === 'Add an employee'){ // Working, but cannot input "string" into 'my_employee.role_id' table.
+      } else if (data.choice === 'Add an employee'){ // Working!
           promptEmployee();
       } else if (data.choice === 'Update an employee role'){
           updateEmployee();
@@ -61,7 +61,10 @@ const promptEmployee = () => {
     db.query("SELECT * FROM my_employee;", function (error, results){
       for (let i = 0; i < results.length; i++){
         let newEmployee = `${results[i].first_name} ${results[i].last_name}`
-        managerArray.push(newEmployee);
+        managerArray.push({
+          value: results[i].id,
+          name: newEmployee
+        });
       }
       return inquirer.prompt([
         {
@@ -86,9 +89,9 @@ const promptEmployee = () => {
           name: 'employeeManager',
           choices: ['Yes', 'No']
         }
-      ]).then((answers) => {
+      ]).then((answers1) => {
         let managerName = null;
-        if (answers.employeeManager === 'Yes'){
+        if (answers1.employeeManager === 'Yes'){
           return inquirer.prompt([
             {
               type: 'list',
@@ -96,22 +99,24 @@ const promptEmployee = () => {
               name: 'manager',
               choices: managerArray
             }
-          ]).then((answers) => {
-            managerName = answers.manager;
+          ]).then((answers2) => {
+            managerName = answers2.manager;
             console.log(managerName)
+            db.query(`SELECT id FROM employee_role WHERE employee_role.title = ?;`, answers1.role, (error, results) => {
+              console.log('Got through query')
+              console.log(results)
+              console.log(error)
+              let role_id = results[0].id;
+              db.query('INSERT INTO my_employee SET ?;', {
+                first_name: answers1.firstName,
+                last_name: answers1.lastName,
+                role_id: role_id,
+                manager_id: managerName,
+              }),
+              console.log(`Added ${answers1.firstName} ${answers1.lastName} to database`)
+            })
           })
         }
-        db.query("SELECT id FROM employee_role WHERE employee_role.title = ?;", answers.role, (error, results) => {
-          console.log('Got through query')
-          let role_id = results[0].id;
-          db.query('INSERT INTO my_employee SET ?;', {
-            first_name: answers.firstName,
-            last_name: answers.lastName,
-            role_id: role_id,
-            manager_id: managerName,
-          }),
-          console.log(`Added ${answers.firstName} ${answers.lastName} to database`)
-        })
       })
     })
   })
@@ -193,7 +198,7 @@ const viewRole = () => {
 }
 // Function that allows the user to view all employees from the database
 const viewEmployee = () => {
-  db.query("SELECT department.name AS department, employee_role.title, employee_role.salary, my_employee.first_name, my_employee.last_name, manager_id FROM department INNER JOIN employee_role ON department.id = employee_role.department_id INNER JOIN my_employee ON employee_role.id = my_employee.role_id;", function(error, results){
+  db.query("SELECT department.name AS department, employee_role.title, employee_role.salary, employee.first_name, employee.last_name, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM department INNER JOIN employee_role ON department.id = employee_role.department_id INNER JOIN my_employee AS employee ON employee_role.id = employee.role_id INNER JOIN my_employee AS manager ON employee.manager_id = manager.id;", function(error, results){
     if (error) throw error;
     console.table(results);
     initialPrompt();

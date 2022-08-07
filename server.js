@@ -4,11 +4,8 @@ import path from 'path';
 import 'dotenv/config';
 import inquirer from 'inquirer';
 
-
-
 const PORT = process.env.PORT || 3001;
 const app = express();
-
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -23,8 +20,6 @@ const db = mysql.createConnection(
     // This is a console log that confirms database connection.
     console.log(`Connected to the company_db database.`)
   );
-
-
 // Prompt that asks the user what they want to do
 const initialPrompt = () => {
   return inquirer.prompt([
@@ -35,17 +30,17 @@ const initialPrompt = () => {
           choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Exit']
       }
   ]).then((data) => {
-      if(data.choice === 'View all departments'){ // Working
+      if(data.choice === 'View all departments'){ // Working!
           viewDepartment();
-      } else if (data.choice === 'View all roles'){ // Working, but 'department' column doesn't show department name
+      } else if (data.choice === 'View all roles'){ // Working!
           viewRole();
-      } else if (data.choice === 'View all employees'){ // Working, but 'role' and 'manager' column not referencing correctly.
+      } else if (data.choice === 'View all employees'){ // Working, but manager_id still showing as INT
           viewEmployee();
-      } else if (data.choice === 'Add a department'){ // Working
+      } else if (data.choice === 'Add a department'){ // Working!
           promptDepartment();
-      } else if (data.choice === 'Add a role'){ // Working
+      } else if (data.choice === 'Add a role'){ // Working!
           promptRole();
-      } else if (data.choice === 'Add an employee'){ // Working, but cannot input "string" into 'role_id' in table.
+      } else if (data.choice === 'Add an employee'){ // Working, but cannot input "string" into 'my_employee.role_id' table.
           promptEmployee();
       } else if (data.choice === 'Update an employee role'){
           updateEmployee();
@@ -58,54 +53,68 @@ const initialPrompt = () => {
 const promptEmployee = () => {
   let roleArray = [];
   let managerArray = [];
-  // roleArray that stores database table as choices for inquirer
-  db.query("SELECT * FROM employee_role;", function (error, results) {
+
+  db.query("SELECT * FROM employee_role;", function (error, results){
     for (let i = 0; i < results.length; i++){
-      roleArray.push(results[i].id);
+      roleArray.push(results[i].title);
     }
-  });
-  // managerArray that stores database table as choices for inquirer
-  db.query("SELECT * FROM my_employee;", function (error, results){
-    for (let i = 0; i < results.length; i++){
-      managerArray.push(results[i].manager_id);
-      console.log(managerArray)
-    }
-  })
-  return inquirer.prompt([
-      {
-          type: 'input',
-          message:'What is the employee`s first name?',
+    db.query("SELECT * FROM my_employee;", function (error, results){
+      for (let i = 0; i < results.length; i++){
+        let newEmployee = `${results[i].first_name} ${results[i].last_name}`
+        managerArray.push(newEmployee);
+      }
+      return inquirer.prompt([
+        {
+          type:'input',
+          message: 'What is the employee`s first name?',
           name: 'firstName'
-      },
-      {
+        },
+        {
           type: 'input',
-          message:'What is the employee`s last name?',
+          message: 'What is the employee`s last name?',
           name: 'lastName'
-      },
-      {
+        },
+        {
           type: 'list',
-          message:'What is this employee`s role?',
+          message: 'What is this employee`s role?',
           name: 'role',
           choices: roleArray
-      },
-      {
+        },
+        {
           type: 'list',
-          message:'Who is this employee`s manager?',
-          name: 'manager',
-          choices: managerArray
-      },
-  ]).then(function(answers){
-    db.query("INSERT INTO my_employee SET ?", {
-      first_name: answers.firstName,
-      last_name: answers.lastName,
-      role_id: answers.role,
-      manager_id: answers.manager,
-    }, function(error){
-      if (error) throw error;
-      console.log(`Added ${answers.firstName} ${answers.lastName} to the database`);
-      initialPrompt();
-    });
-  });
+          message: 'Does this employee have a manager?',
+          name: 'employeeManager',
+          choices: ['Yes', 'No']
+        }
+      ]).then((answers) => {
+        let managerName = null;
+        if (answers.employeeManager === 'Yes'){
+          return inquirer.prompt([
+            {
+              type: 'list',
+              message: 'Select the employee`s manager from the list below',
+              name: 'manager',
+              choices: managerArray
+            }
+          ]).then((answers) => {
+            managerName = answers.manager;
+            console.log(managerName)
+          })
+        }
+        db.query("SELECT id FROM employee_role WHERE employee_role.title = ?;", answers.role, (error, results) => {
+          console.log('Got through query')
+          let role_id = results[0].id;
+          db.query('INSERT INTO my_employee SET ?;', {
+            first_name: answers.firstName,
+            last_name: answers.lastName,
+            role_id: role_id,
+            manager_id: managerName,
+          }),
+          console.log(`Added ${answers.firstName} ${answers.lastName} to database`)
+        })
+      })
+    })
+  })
 }
 // Prompt that allows the user to add a new role to the database
 const promptRole = () => {
@@ -147,8 +156,6 @@ const promptRole = () => {
     });
   });
 }
-
-
 // Prompt that allows the user to add a department to the database
 const promptDepartment = () => {
   console.log('This will prompt the user to enter the name of the department, which is added to the database.')
@@ -184,7 +191,6 @@ const viewRole = () => {
     initialPrompt();
   });
 }
-
 // Function that allows the user to view all employees from the database
 const viewEmployee = () => {
   db.query("SELECT department.name AS department, employee_role.title, employee_role.salary, my_employee.first_name, my_employee.last_name, manager_id FROM department INNER JOIN employee_role ON department.id = employee_role.department_id INNER JOIN my_employee ON employee_role.id = my_employee.role_id;", function(error, results){
@@ -193,10 +199,7 @@ const viewEmployee = () => {
     initialPrompt();
   });
 }
-
-
-
-  // If response is wrong, send '404'.
+  // If response is bad, send '404'.
   app.use((req, res) => {
     res.status(404).end();
   });

@@ -32,10 +32,10 @@ const initialPrompt = () => {
           type: 'list',
           message: "What would you like to do?",
           name: "choice",
-          choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role']
+          choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Exit']
       }
   ]).then((data) => {
-      if(data.choice === 'View all departments'){ 
+      if(data.choice === 'View all departments'){ // Working
           viewDepartment();
       } else if (data.choice === 'View all roles'){ // Working, but 'department' column doesn't show department name
           viewRole();
@@ -45,22 +45,26 @@ const initialPrompt = () => {
           promptDepartment();
       } else if (data.choice === 'Add a role'){ // Working
           promptRole();
-      } else if (data.choice === 'Add an employee'){ // Working
+      } else if (data.choice === 'Add an employee'){ // Working, but cannot input "string" into 'role_id' in table.
           promptEmployee();
       } else if (data.choice === 'Update an employee role'){
           updateEmployee();
-      } 
+      } else if (data.choice === 'Exit'){
+        return init();
+      }
   });
 }
 // Prompt that allows the user to add a new employee to the database
 const promptEmployee = () => {
   let roleArray = [];
   let managerArray = [];
+  // roleArray that stores database table as choices for inquirer
   db.query("SELECT * FROM employee_role;", function (error, results) {
     for (let i = 0; i < results.length; i++){
-      roleArray.push(results[i].title);
+      roleArray.push(results[i].id);
     }
   });
+  // managerArray that stores database table as choices for inquirer
   db.query("SELECT * FROM my_employee;", function (error, results){
     for (let i = 0; i < results.length; i++){
       managerArray.push(results[i].manager_id);
@@ -174,7 +178,7 @@ const viewDepartment = () => {
 }
 // Function that allows the user to view all roles from the database
 const viewRole = () => {
-  db.query("SELECT * FROM employee_role;", function(error, results){
+  db.query("SELECT department.name AS department, employee_role.title, employee_role.salary FROM employee_role LEFT JOIN department ON employee_role.department_id = department.id ORDER BY department.name; ", function(error, results){
     if (error) throw error;
     console.table(results);
     initialPrompt();
@@ -183,12 +187,14 @@ const viewRole = () => {
 
 // Function that allows the user to view all employees from the database
 const viewEmployee = () => {
-  db.query("SELECT * FROM my_employee;", function(error, results){
+  db.query("SELECT department.name AS department, employee_role.title, employee_role.salary, my_employee.first_name, my_employee.last_name, manager_id FROM department INNER JOIN employee_role ON department.id = employee_role.department_id INNER JOIN my_employee ON employee_role.id = my_employee.role_id;", function(error, results){
     if (error) throw error;
     console.table(results);
     initialPrompt();
   });
 }
+
+
 
   // If response is wrong, send '404'.
   app.use((req, res) => {

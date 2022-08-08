@@ -107,6 +107,7 @@ const promptEmployee = () => {
                 manager_id: managerName,
               }),
               console.log(`Added ${answers1.firstName} ${answers1.lastName} to database`)
+              initialPrompt()
             })
           })
         }

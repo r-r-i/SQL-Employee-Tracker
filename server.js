@@ -1,10 +1,7 @@
 import express from 'express';
 import mysql from 'mysql2';
-import path from 'path';
 import 'dotenv/config';
 import inquirer from 'inquirer';
-
-const PORT = process.env.PORT || 3001;
 const app = express();
 
 app.use(express.urlencoded({ extended: false }));
@@ -17,7 +14,7 @@ const db = mysql.createConnection(
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME
     },
-    // This is a console log that confirms database connection.
+    // Confirming database connection.
     console.log(`Connected to the company_db database.`)
   );
 // Prompt that asks the user what they want to do
@@ -30,22 +27,20 @@ const initialPrompt = () => {
           choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Exit']
       }
   ]).then((data) => {
-      if(data.choice === 'View all departments'){ // Working!
+      if(data.choice === 'View all departments'){ 
           viewDepartment();
-      } else if (data.choice === 'View all roles'){ // Working!
+      } else if (data.choice === 'View all roles'){ 
           viewRole();
-      } else if (data.choice === 'View all employees'){ // Working!
+      } else if (data.choice === 'View all employees'){ 
           viewEmployee();
-      } else if (data.choice === 'Add a department'){ // Working!
+      } else if (data.choice === 'Add a department'){ 
           promptDepartment();
-      } else if (data.choice === 'Add a role'){ // Working!
+      } else if (data.choice === 'Add a role'){ 
           promptRole();
-      } else if (data.choice === 'Add an employee'){ // Working!
+      } else if (data.choice === 'Add an employee'){
           promptEmployee();
       } else if (data.choice === 'Update an employee role'){
           updateEmployee();
-      } else if (data.choice === 'Exit'){
-        return init();
       }
   });
 }
@@ -101,11 +96,8 @@ const promptEmployee = () => {
             }
           ]).then((answers2) => {
             managerName = answers2.manager;
-            console.log(managerName)
             db.query(`SELECT id FROM employee_role WHERE employee_role.title = ?;`, answers1.role, (error, results) => {
-              console.log('Got through query')
-              console.log(results)
-              console.log(error)
+              if (error) throw error;
               let role_id = results[0].id;
               db.query('INSERT INTO my_employee SET ?;', {
                 first_name: answers1.firstName,
@@ -163,7 +155,6 @@ const promptRole = () => {
 }
 // Prompt that allows the user to add a department to the database
 const promptDepartment = () => {
-  console.log('This will prompt the user to enter the name of the department, which is added to the database.')
   return inquirer.prompt([
       {
           type: 'input',
@@ -175,10 +166,51 @@ const promptDepartment = () => {
       name: answers.department,
     }, function(error){
       if (error) throw error;
-      console.log(`added ${answers.department} to the database`);
+      console.log(`Added ${answers.department} to the database`);
       initialPrompt();
     });
   });
+}
+// Function that allows the user to update an employee's role
+const updateEmployee = () => {
+  const roleArray = [];
+  const employeeArray = [];
+
+  db.query("SELECT * FROM employee_role;", (error, results) => {
+    for (let i = 0; i< results.length; i++){
+      roleArray.push(results[i].title);
+    }
+    db.query("SELECT * FROM my_employee;", (error, results) => {
+      for (let i = 0; i < results.length; i++){
+        let newEmployee = `${results[i].first_name} ${results[i].last_name}`
+        employeeArray.push({
+          value: results[i].id,
+          name: newEmployee
+        });
+      }
+      return inquirer.prompt([
+        {
+          type: 'list',
+          message: 'Which employee`s role would do you want to update?',
+          name: 'employeeRole',
+          choices: employeeArray
+        },
+        {
+          type: 'list',
+          message: 'Which role do you want to assign the selected employee?',
+          name: 'newRole',
+          choices: roleArray
+        }
+      ]).then((answers) => {
+        db.query("UPDATE employee_role SET title = ? WHERE id = ?;", [answers.newRole, answers.employeeRole], (error, results) => {
+          if (error) throw error;
+          console.log(results)
+          console.log("Updated employee role");
+          initialPrompt()
+        })
+      })
+    })
+  })
 }
 // Function that allows the user to view all departments from the database
 const viewDepartment = () => {
@@ -214,6 +246,7 @@ const viewEmployee = () => {
     initialPrompt()
   }
 
+// Start app
 init();
 
 

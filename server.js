@@ -206,7 +206,6 @@ const updateEmployee = () => {
       ]).then((answers) => {
         db.query("UPDATE employee_role SET title = ? WHERE id = ?;", [answers.newRole, answers.employeeRole], (error, results) => {
           if (error) throw error;
-          console.log(results)
           console.log("Updated employee role");
           initialPrompt()
         })

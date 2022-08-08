@@ -1,5 +1,6 @@
 import express from 'express';
 import mysql from 'mysql2';
+import path from 'path';
 import 'dotenv/config';
 import inquirer from 'inquirer';
 const app = express();

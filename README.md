@@ -6,7 +6,7 @@ For this challenge I was given the task of building a command-line application f
 
 ## Mock-Up
 
-The following video shows the application being used from the command line. Click the link below.
+The following video shows the application being used from the command line. Click this link:
 [demo](https://youtu.be/rIDedIZuR74)
 
 ## Installation Instructions
